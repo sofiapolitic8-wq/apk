@@ -133,7 +133,8 @@ class GameActivity : Activity(), GameBridge.Host, QuickSheet.Host, ControlsView.
         st.domStorageEnabled = true
         st.allowFileAccess = false
         st.allowContentAccess = false
-        st.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+        st.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW   // game servers use plain ws:// sockets
+        android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(wv, true)
         st.mediaPlaybackRequiresUserGesture = false
         st.setSupportZoom(false)
         st.builtInZoomControls = false

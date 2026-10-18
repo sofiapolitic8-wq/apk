@@ -18,6 +18,7 @@
     targets: false, targetCount: 3,
     largest: false,
     radar: false, radarRange: 700,
+    bright: 100, sat: 100,
     report: true
   };
 
@@ -44,6 +45,18 @@
     v = +v;
     if (v !== v || v === Infinity || v === -Infinity) return dflt;
     return v < lo ? lo : (v > hi ? hi : v);
+  }
+
+  var filterKey = '', filterEl = null;
+  /* Brightness / saturation as a CSS filter on the game canvas. Only touched when the value changes. */
+  function applyLook() {
+    var c = findCanvas();
+    var key = cfg.bright + '/' + cfg.sat;
+    if (c === filterEl && key === filterKey) return;
+    if (filterEl && filterEl !== c && filterEl.style) filterEl.style.filter = '';
+    filterEl = c; filterKey = key;
+    if (!c || !c.style) return;
+    c.style.filter = (cfg.bright === 100 && cfg.sat === 100) ? '' : 'brightness(' + cfg.bright + '%) saturate(' + cfg.sat + '%)';
   }
 
   function anyOverlay() { return cfg.guide || cfg.ring || cfg.targets || cfg.largest || cfg.radar; }
@@ -149,7 +162,7 @@
   var wr = { me: null, snakes: null, foods: null, nf: 0, vx: 0, vy: 0, gsc: 1, cw: 0, ch: 0, k: 1, left: 0, top: 0 };
 
   function world() {
-    var me = W.snake, list = W.snakes, c = findCanvas();
+    var me = W.snake, list = W.snakes || W.slithers, c = findCanvas();
     if (!me || typeof me.xx !== 'number' || !list || !c || !c.width) return null;
     if (typeof W.view_xx !== 'number' || typeof W.view_yy !== 'number' || typeof W.gsc !== 'number') return null;
     var r = c.getBoundingClientRect();
@@ -165,7 +178,8 @@
   function sx(w, x) { return w.left + (w.cw / 2 + (x - w.vx) * w.gsc) * w.k; }
   function sy(w, y) { return w.top + (w.ch / 2 + (y - w.vy) * w.gsc) * w.k; }
 
-  function headRadius(s) { return 14.5 * (s.sc || 1); }
+  function scaleOf(s) { return s.sc || s.N || 1; }
+  function headRadius(s) { return 14.5 * scaleOf(s); }
 
   /* ------------------------------------------------------------- overlays */
 
@@ -318,13 +332,13 @@
     }
 
     if (cfg.ring) {
-      var rr = cfg.ringRange * 29 * (me.sc || 1) * wk;
+      var rr = cfg.ringRange * 29 * scaleOf(me) * wk;
       ox.lineWidth = 2;
       ox.strokeStyle = 'rgba(255,200,87,0.7)';
       ox.beginPath();
       ox.arc(hx, hy, rr, 0, TAU);
       ox.stroke();
-      var rw = cfg.ringRange * 29 * (me.sc || 1), rw2 = rw * rw;
+      var rw = cfg.ringRange * 29 * scaleOf(me), rw2 = rw * rw;
       var list = w.snakes;
       ox.strokeStyle = 'rgba(255,107,107,0.95)';
       for (var k = 0; k < list.length; k++) {
@@ -339,7 +353,7 @@
     }
 
     if (cfg.guide && typeof me.ang === 'number') {
-      var len = 16 * 29 * (me.sc || 1) * wk;
+      var len = 16 * 29 * scaleOf(me) * wk;
       ox.lineWidth = 2;
       ox.strokeStyle = 'rgba(140,245,165,0.55)';
       ox.beginPath();
@@ -415,6 +429,9 @@
       cfg.ringRange = num(o.ringRange, 2, 30, cfg.ringRange);
       cfg.targetCount = Math.round(num(o.targetCount, 1, 6, cfg.targetCount));
       cfg.radarRange = num(o.radarRange, 200, 3000, cfg.radarRange);
+      cfg.bright = Math.round(num(o.bright, 40, 160, cfg.bright));
+      cfg.sat = Math.round(num(o.sat, 40, 160, cfg.sat));
+      applyLook();
       if (anyOverlay()) { if (ensureOverlay()) sizeOverlay(); ensureLoop(); }
       else { if (rafId) { W.cancelAnimationFrame(rafId); rafId = 0; } clearOverlay(); }
     } catch (e) { /* bad config: keep the previous one */ }
@@ -422,13 +439,13 @@
 
   function probe() {
     var c = findCanvas();
-    var haveWorld = !!(W.snake && typeof W.snake.xx === 'number' && W.snakes && typeof W.view_xx === 'number' && typeof W.gsc === 'number');
+    var haveWorld = !!(W.snake && typeof W.snake.xx === 'number' && (W.snakes || W.slithers) && typeof W.view_xx === 'number' && typeof W.gsc === 'number');
     return {
       v: 1,
       canvas: !!c,
       menuEl: !!D.getElementById('login'),
       snake: !!(W.snake && typeof W.snake.xx === 'number'),
-      snakes: !!W.snakes,
+      snakes: !!(W.snakes || W.slithers),
       foods: !!W.foods,
       view: typeof W.view_xx === 'number' && typeof W.gsc === 'number',
       score: score >= 0,
@@ -442,6 +459,7 @@
     var b = bridge();
     var p = false;
     try { p = isPlaying(); } catch (e) { p = false; }
+    try { applyLook(); } catch (e) {}
     if (p !== playing) {
       playing = p;
       if (playing) ensureLoop(); else clearOverlay();

@@ -184,6 +184,14 @@ class SettingsActivity : Activity() {
         card4.addView(Ui.sliderRow(c, "Radar range", 200f, 3000f, 100f, o.radarRange, { "${it.toInt()}" }) { o.radarRange = it; ProfileStore.touch() })
         col.addView(card4)
 
+        // ---- look
+        col.addView(Ui.header(c, "Look"))
+        val card5 = Ui.card(c)
+        card5.addView(Ui.sliderRow(c, "Brightness", 40f, 160f, 5f, o.bright.toFloat(), { "${it.toInt()}%" }) { o.bright = it.toInt(); ProfileStore.touch() })
+        card5.addView(Ui.divider(c))
+        card5.addView(Ui.sliderRow(c, "Saturation", 40f, 160f, 5f, o.sat.toFloat(), { "${it.toInt()}%" }) { o.sat = it.toInt(); ProfileStore.touch() })
+        col.addView(card5)
+
         // ---- data
         col.addView(Ui.header(c, "Data"))
         col.addView(Ui.button(c, "Reset best score, runs and time", false) {

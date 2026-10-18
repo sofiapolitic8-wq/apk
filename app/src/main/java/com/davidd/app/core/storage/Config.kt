@@ -132,13 +132,15 @@ class OverlayCfg {
     var ringRange = 8f        // in body widths
     var targetCount = 3
     var radarRange = 700f     // world units
+    var bright = 100          // screen brightness %, 40..160
+    var sat = 100             // colour saturation %, 40..160
 
     fun any(): Boolean = guide || ring || targets || largest || radar
 
     fun toJson(): JSONObject = JSONObject()
         .put("guide", guide).put("ring", ring).put("targets", targets).put("largest", largest)
         .put("radar", radar).put("ringRange", ringRange.toDouble()).put("targetCount", targetCount)
-        .put("radarRange", radarRange.toDouble())
+        .put("radarRange", radarRange.toDouble()).put("bright", bright).put("sat", sat)
 
     fun load(o: JSONObject?) {
         if (o == null) return
@@ -150,11 +152,13 @@ class OverlayCfg {
         ringRange = clampF(o.optDouble("ringRange", ringRange.toDouble()), 2f, 30f, 8f)
         targetCount = clampI(o.optInt("targetCount", targetCount), 1, 6)
         radarRange = clampF(o.optDouble("radarRange", radarRange.toDouble()), 200f, 3000f, 700f)
+        bright = clampI(o.optInt("bright", bright), 40, 160)
+        sat = clampI(o.optInt("sat", sat), 40, 160)
     }
 }
 
 class PerfCfg {
-    var blockAds = true
+    var blockAds = false
     var keepOn = true
     var motion = false        // small UI transitions
 

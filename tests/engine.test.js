@@ -7,7 +7,7 @@ function makeEnv() {
   class KeyboardEvent { constructor(t, o) { this.type = t; Object.assign(this, o); } }
   class WheelEvent { constructor(t, o) { this.type = t; Object.assign(this, o); } }
   const canvasEl = {
-    width: 1000, height: 500, clientWidth: 500, clientHeight: 250, isConnected: true,
+    style: {}, width: 1000, height: 500, clientWidth: 500, clientHeight: 250, isConnected: true,
     getBoundingClientRect() { return { left: 0, top: 0, width: 500, height: 250 }; },
     dispatchEvent(e) { events.push(['canvas', e]); }
   };
@@ -143,6 +143,25 @@ t('draw with a half-broken world throws nothing', () => {
   env.win.snake = me; env.win.snakes = [me, null, {}, { xx: 'bad' }];
   env.win.view_xx = 0; env.win.view_yy = 0; env.win.gsc = 1; env.win.foods = [null, {}, { xx: 1 }]; env.win.foods_c = 3;
   c.setConfig({ ring: true, guide: true, targets: true, largest: true, radar: true, dpr: 1 });
+  c._t.draw();
+});
+t('brightness / saturation set and clear the canvas filter', () => {
+  const env = makeEnv(); const c = load(env);
+  const cv = env.doc.getElementsByTagName('canvas')[0];
+  c.setConfig({ bright: 120, sat: 80 });
+  assert.strictEqual(cv.style.filter, 'brightness(120%) saturate(80%)');
+  c.setConfig({ bright: 100, sat: 100 });
+  assert.strictEqual(cv.style.filter, '');
+  c.setConfig({ bright: 9999, sat: -5 });
+  assert.strictEqual(c._t.cfg.bright, 160); assert.strictEqual(c._t.cfg.sat, 40);
+});
+t('engine accepts the game\'s own size field (N) and slithers list', () => {
+  const env = makeEnv(); const c = load(env);
+  const me = { xx: 0, yy: 0, N: 2, sct: 10 };
+  env.win.snake = me; env.win.slithers = [me, { xx: 100, yy: 0, N: 1, sct: 5 }];
+  env.win.view_xx = 0; env.win.view_yy = 0; env.win.gsc = 1;
+  assert.strictEqual(c.probe().overlay, 'ready');
+  c.setConfig({ ring: true, targets: true, dpr: 1 });
   c._t.draw();
 });
 console.log('\n' + passed + ' tests passed' + (process.exitCode ? ', SOME FAILED' : ''));
