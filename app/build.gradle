@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.davidd.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.davidd.app'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1.0'
+    }
+
+    // Public sideload key (see README): fine for your own phones, use a private key for any store.
+    signingConfigs {
+        release {
+            storeFile file('davidd-sideload.jks')
+            storePassword 'daviddpass'
+            keyAlias 'davidd'
+            keyPassword 'daviddpass'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = '17' }
+    packaging {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}', 'DebugProbesKt.bin', 'kotlin/**', 'META-INF/*.kotlin_module', 'META-INF/*.version']
+        }
+    }
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+// No third-party libraries: only the Android framework and the Kotlin standard library.
+dependencies {
+}
